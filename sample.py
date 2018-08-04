@@ -14,7 +14,7 @@ wikis = {}
 #     )
 #     return response
 
-
+ostream = open ("stream.json",'a')
 async def main():
     async for event in aiosseclient('https://stream.wikimedia.org/v2/stream/recentchange'):
         d = json.loads(event.data)
@@ -46,10 +46,15 @@ async def main():
             url = server_url + server_script_path + '/index.php?oldid='+  str(_id) + '&action=raw'
             
             async with aiohttp.ClientSession() as session:
-                response = await session.get(url)
-                async for line in response.content:
-                    line = line.decode('utf8')
-                    print (url, line)
+                resp = await session.get(url)
+                doc = await resp.text()
+                #async for line in response.content:
+                #    line = line.decode('utf8')
+                #print (url, doc)
+                d['content'] =doc
+
+                json.dump(d, ostream)
+                ostream.write('\n')
                         
             #print (get_page(url))
 
