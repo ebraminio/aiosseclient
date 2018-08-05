@@ -3,61 +3,60 @@ import aiohttp
 from aiosseclient import aiosseclient
 import pprint
 import json
-import collections
-#c = Counter()
+
 wikis = {}
 
-
-# async def get_page(url):
-#     response = yield from aiohttp.request(
-#         'GET', url
-#     )
-#     return response
-
+async def fetch(session, d, url):
+    try:
+        resp = await session.get(url)
+        doc = await resp.text()
+        d['content'] =doc
+        json.dump(d, ostream)
+        ostream.write('\n')
+        return 'ok'
+        
+    except Exception as e:
+        print (e)
+        return await fetch(session,d,  url)
+            
 ostream = open ("stream.json",'a')
+count = 0 
 async def main():
-    async for event in aiosseclient('https://stream.wikimedia.org/v2/stream/recentchange'):
-        d = json.loads(event.data)
+    async with aiohttp.ClientSession() as session:
+        async for event in aiosseclient('https://stream.wikimedia.org/v2/stream/recentchange'):
+            d = json.loads(event.data)
 
-        w = d['wiki']
-        if 'revision' in d:
-            _id = d['revision']['old']
-        else:
-            continue
-        
-        if _id is None :
-            continue
-        
-        if w not in wikis:
-            wikis [w] = {'min': _id, 'max' : _id , 'count': 1}
-       
-        if wikis [w]['min'] > _id :
-            wikis [w]['min']= _id
-            
-            #if wikis [w]['max'] < _id :
-            # wikis [w]['max']= _id
-            wikis [w]['count']= wikis [w]['count'] +1
-            #pprint.pprint([w,wikis [w]])
-            #pprint.pprint(d)
+            w = d['wiki']
+            if 'revision' in d:
+                _id = d['revision']['old']
+            else:
+                continue
 
-            server_script_path = d['server_script_path']
-            server_url = d['server_url']
+            if _id is None :
+                continue
 
-            url = server_url + server_script_path + '/index.php?oldid='+  str(_id) + '&action=raw'
-            
-            async with aiohttp.ClientSession() as session:
-                resp = await session.get(url)
-                doc = await resp.text()
-                #async for line in response.content:
-                #    line = line.decode('utf8')
-                #print (url, doc)
-                d['content'] =doc
+            if w not in wikis:
+                wikis [w] = {'min': _id, 'max' : _id , 'count': 1}
 
-                json.dump(d, ostream)
-                ostream.write('\n')
-                        
-            #print (get_page(url))
+            if wikis [w]['min'] > _id :
+                wikis [w]['min']= _id
 
+                #if wikis [w]['max'] < _id :
+                # wikis [w]['max']= _id
+                wikis [w]['count']= wikis [w]['count'] +1
+                #pprint.pprint([w,wikis [w]])
+                #pprint.pprint(d)
+
+                server_script_path = d['server_script_path']
+                server_url = d['server_url']
+
+                url = server_url + server_script_path + '/index.php?oldid='+  str(_id) + '&action=raw'
+                status = await fetch(session, d, url)
+                global count
+                count = count + 1
+                if count % 1000 == 0:
+                    print (".")
+                
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
