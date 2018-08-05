@@ -5,6 +5,9 @@ import pprint
 import json
 
 wikis = {}
+    
+ostream = open ("stream.json",'a')
+count = 0 
 
 async def fetch(session, d, url):
     try:
@@ -15,14 +18,12 @@ async def fetch(session, d, url):
         ostream.write('\n')
         return 'ok'
         
-    except Exception as e:
+    except concurrent.futures._base.TimeoutError as e:
         print (e)
         return await fetch(session,d,  url)
-            
-ostream = open ("stream.json",'a')
-count = 0 
-async def main():
-    async with aiohttp.ClientSession() as session:
+
+async def read_stream(session):
+    try:
         async for event in aiosseclient('https://stream.wikimedia.org/v2/stream/recentchange'):
             d = json.loads(event.data)
 
@@ -56,7 +57,14 @@ async def main():
                 count = count + 1
                 if count % 1000 == 0:
                     print (".")
-                
+    except Exception as e:
+        print (e)
+        return await read_stream(session)
+
+async def main():
+    async with aiohttp.ClientSession() as session:
+        never = await read_stream(session)
+            
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
