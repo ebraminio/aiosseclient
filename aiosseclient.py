@@ -22,7 +22,7 @@ async def aiosseclient(url, last_id=None, **kwargs):
             line = line.decode('utf8')
 
             if line == '\n' or line == '\r' or line == '\r\n':
-                if lines[0] == ':ok\n':
+                if not lines or lines[0] == ':ok\n':
                     lines = []
                     continue
 
