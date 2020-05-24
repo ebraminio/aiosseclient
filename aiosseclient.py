@@ -1,6 +1,6 @@
 import re
 import aiohttp
-
+import warnings
 
 async def aiosseclient(url, last_id=None, **kwargs):
     if 'headers' not in kwargs:
@@ -15,7 +15,7 @@ async def aiosseclient(url, last_id=None, **kwargs):
     if last_id:
         kwargs['headers']['Last-Event-ID'] = last_id
     
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=None) as session:
         response = await session.get(url, **kwargs)
         lines = []
         async for line in response.content:
