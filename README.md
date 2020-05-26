@@ -3,7 +3,7 @@ Asynchronous Server Side Events (SSE) Client
 
 Similar to [sseclient](https://github.com/btubbs/sseclient) and [sseclient-py](https://github.com/mpetazzoni/sseclient), a tiny package for supporting Server Side Events (SSE) with py3.5 [asyncio](https://www.python.org/dev/peps/pep-3156/) and [aiohttp](http://aiohttp.readthedocs.io/en/stable/).
 
-Install it with this: `pip3 install git+https://github.com/ebraminio/aiosseclient`
+Install it with this: `pip3 install git+https://github.com/goliatone/aiosseclient`
 
 Sample code ([read more](https://wikitech.wikimedia.org/wiki/EventStreams)):
 ```python
@@ -18,3 +18,11 @@ async def main():
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
 ```
+
+Changelog:
+
+* 2020-05-25:
+    * Add `encode` method to `Event` class 
+* 2020-05-24:
+    * Set `aiohttp.ClientSession` timeout to None
+    * Add missing `warnings` import
