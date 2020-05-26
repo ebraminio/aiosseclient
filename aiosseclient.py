@@ -47,6 +47,7 @@ class Event(object):
         self.id = id
         self.retry = retry
 
+
     def dump(self):
         lines = []
         if self.id:
@@ -62,6 +63,10 @@ class Event(object):
         lines.extend('data: %s' % d for d in self.data.split('\n'))
         return '\n'.join(lines) + '\n\n'
 
+    def encode(self):
+        return self.dump().encode('utf-8')
+
+        
     @classmethod
     def parse(cls, raw):
         """
