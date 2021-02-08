@@ -1,6 +1,6 @@
 import re
 import aiohttp
-
+import warnings
 
 async def aiosseclient(url, last_id=None, **kwargs):
     if 'headers' not in kwargs:
@@ -15,7 +15,10 @@ async def aiosseclient(url, last_id=None, **kwargs):
     if last_id:
         kwargs['headers']['Last-Event-ID'] = last_id
     
-    async with aiohttp.ClientSession() as session:
+    # Override default timeout of 5 minutes
+    timeout = aiohttp.ClientTimeout(total=None, connect=None,
+                      sock_connect=None, sock_read=None)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
         response = await session.get(url, **kwargs)
         lines = []
         async for line in response.content:
@@ -44,6 +47,7 @@ class Event(object):
         self.id = id
         self.retry = retry
 
+
     def dump(self):
         lines = []
         if self.id:
@@ -59,6 +63,10 @@ class Event(object):
         lines.extend('data: %s' % d for d in self.data.split('\n'))
         return '\n'.join(lines) + '\n\n'
 
+    def encode(self):
+        return self.dump().encode('utf-8')
+
+        
     @classmethod
     def parse(cls, raw):
         """
