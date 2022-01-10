@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
     name='aiosseclient',
     version='0.0.1',
-    description='Asynchronous Server Sent Event strems client.',
+    description='Asynchronous Server Sent Event streams client.',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     author='Ebrahim Byagowi',
