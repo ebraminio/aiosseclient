@@ -6,6 +6,7 @@ setup(
     version='0.0.1',
     description='Asynchronous Server Sent Event strems client.',
     long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     author='Ebrahim Byagowi',
     author_email='ebrahim@gnu.org',
     url='https://github.com/ebraminio/aiosseclient',
