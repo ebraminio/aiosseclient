@@ -20,6 +20,9 @@ async def aiosseclient(url, last_id=None, **kwargs):
                       sock_connect=None, sock_read=None)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         response = await session.get(url, **kwargs)
+        if response.status != 200:
+            yield Event("HTTP response.status: %s" % response.status, "stream_failed")
+            await session.close()
         lines = []
         async for line in response.content:
             line = line.decode('utf8')
@@ -29,7 +32,10 @@ async def aiosseclient(url, last_id=None, **kwargs):
                     lines = []
                     continue
 
-                yield Event.parse(''.join(lines))
+                current_event = Event.parse(''.join(lines))
+                yield current_event
+                if current_event.event == "auth_revoked":
+                    await session.close()
                 lines = []
             else:
                 lines.append(line)
