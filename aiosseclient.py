@@ -2,7 +2,7 @@ import re
 import aiohttp
 import warnings
 
-async def aiosseclient(url, last_id=None, **kwargs):
+async def aiosseclient(url, last_id=None, valid_http_codes=[200,301,307], exit_events=[], **kwargs):
     if 'headers' not in kwargs:
         kwargs['headers'] = {}
 
@@ -20,8 +20,8 @@ async def aiosseclient(url, last_id=None, **kwargs):
                       sock_connect=None, sock_read=None)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         response = await session.get(url, **kwargs)
-        if response.status != 200:
-            yield Event("HTTP response.status: %s" % response.status, "stream_failed")
+        if response.status not in valid_http_codes:
+            yield Event("Invalid HTTP response.status: %s" % response.status, "stream_failed")
             await session.close()
         lines = []
         async for line in response.content:
@@ -34,7 +34,7 @@ async def aiosseclient(url, last_id=None, **kwargs):
 
                 current_event = Event.parse(''.join(lines))
                 yield current_event
-                if current_event.event == "auth_revoked":
+                if current_event.event in exit_events:
                     await session.close()
                 lines = []
             else:
