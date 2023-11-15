@@ -1,5 +1,5 @@
+'''Asynchronous Server Side Events (SSE) Client'''
 import re
-import aiohttp
 import warnings
 from typing import (
     List,
@@ -7,57 +7,71 @@ from typing import (
     AsyncGenerator,
     Final,
 )
+import aiohttp
 
-_sse_line_pattern: Final[re.Pattern[str]] = re.compile('(?P<name>[^:]*):?( ?(?P<value>.*))?')
+# pylint: disable=too-many-arguments, dangerous-default-value, redefined-builtin
 
-# Good parts of the below class is adopted from https://github.com/btubbs/sseclient/blob/db38dc6/sseclient.py#L101-L163
+_SSE_LINE_PATTERN: Final[re.Pattern[str]] = re.compile('(?P<name>[^:]*):?( ?(?P<value>.*))?')
+
+
+# Good parts of the below class is adopted from:
+#   https://github.com/btubbs/sseclient/blob/db38dc6/sseclient.py
 class Event:
+    '''The object created as the result of received events'''
     data: str
     event: str
     id: Optional[str]
     retry: Optional[bool]
 
-    def __init__(self, data: str='', event: str='message', id: Optional[str]=None, retry: Optional[bool]=None):
+    def __init__(
+        self,
+        data: str = '',
+        event: str = 'message',
+        id: Optional[str] = None,
+        retry: Optional[bool] = None
+    ):
         self.data = data
         self.event = event
         self.id = id
         self.retry = retry
 
-    def dump(self):
+    def dump(self) -> str:
+        '''Serialize the event object to a string'''
         lines = []
         if self.id:
-            lines.append('id: %s' % self.id)
+            lines.append(f'id: {self.id}')
 
         # Only include an event line if it's not the default already.
         if self.event != 'message':
-            lines.append('event: %s' % self.event)
+            lines.append(f'event: {self.event}')
 
         if self.retry:
-            lines.append('retry: %s' % self.retry)
+            lines.append(f'retry: {self.retry}')
 
-        lines.extend('data: %s' % d for d in self.data.split('\n'))
+        lines.extend(f'data: {d}' for d in self.data.split('\n'))
         return '\n'.join(lines) + '\n\n'
 
-    def encode(self):
+    def encode(self) -> bytes:
+        '''Serialize the event object to a bytes object'''
         return self.dump().encode('utf-8')
-        
+
     @classmethod
     def parse(cls, raw):
-        """
+        '''
         Given a possibly-multiline string representing an SSE message, parse it
         and return a Event object.
-        """
+        '''
         msg = cls()
         for line in raw.splitlines():
-            m = _sse_line_pattern.match(line)
+            m = _SSE_LINE_PATTERN.match(line)
             if m is None:
                 # Malformed line.  Discard but warn.
-                warnings.warn('Invalid SSE line: "%s"' % line, SyntaxWarning)
+                warnings.warn('Invalid SSE line: "{line}"', SyntaxWarning)
                 continue
 
             name = m.group('name')
             if name == '':
-                # line began with a ":", so is a comment.  Ignore
+                # line began with a ':', so is a comment.  Ignore
                 continue
             value = m.group('value')
 
@@ -65,7 +79,7 @@ class Event:
                 # If we already have some data, then join to it with a newline.
                 # Else this is it.
                 if msg.data:
-                    msg.data = '%s\n%s' % (msg.data, value)
+                    msg.data = f'{msg.data}\n{value}'
                 else:
                     msg.data = value
             elif name == 'event':
@@ -80,14 +94,17 @@ class Event:
     def __str__(self):
         return self.data
 
+
+# pylint: disable=too-many-arguments, dangerous-default-value
 async def aiosseclient(
     url: str,
-    last_id: Optional[str]=None,
-    valid_http_codes: List[int]=[200, 301, 307],
-    exit_events: List[str]=[],
-    timeout_total: Optional[float]=None,
-    headers: Optional[dict[str, str]]={}
+    last_id: Optional[str] = None,
+    valid_http_codes: List[int] = [200, 301, 307],
+    exit_events: List[str] = [],
+    timeout_total: Optional[float] = None,
+    headers: Optional[dict[str, str]] = {},
 ) -> AsyncGenerator[Event, None]:
+    '''Canonical API of the library'''
     # The SSE spec requires making requests with Cache-Control: nocache
     headers['Cache-Control'] = 'no-cache'
 
@@ -102,16 +119,16 @@ async def aiosseclient(
                                     sock_connect=None, sock_read=None)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         try:
-            yield Event("session created: %s" % session, "stream_telemetry")
+            yield Event(f'session created: {session}', 'stream_telemetry')
             response = await session.get(url, headers=headers)
             if response.status not in valid_http_codes:
-                yield Event("Invalid HTTP response.status: %s" % response.status, "stream_failed")
+                yield Event(f'Invalid HTTP response.status: {response.status}', 'stream_failed')
                 await session.close()
             lines = []
             async for line in response.content:
                 line = line.decode('utf8')
 
-                if line == '\n' or line == '\r' or line == '\r\n':
+                if line in {'\n', '\r', '\r\n'}:
                     if lines[0] == ':ok\n':
                         lines = []
                         continue
@@ -123,6 +140,6 @@ async def aiosseclient(
                     lines = []
                 else:
                     lines.append(line)
-        except Exception as sseerr:
-            yield Event("Exception: %s" % sseerr, "session_failed")
+        except TimeoutError as sseerr:
+            yield Event(f'TimeoutError: {sseerr}', 'session_failed')
             await session.close()

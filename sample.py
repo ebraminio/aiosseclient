@@ -1,29 +1,33 @@
 #!/usr/bin/env python3
+'''Asynchronous Server Side Events (SSE) Client'''
 import asyncio
+import json
 import aiohttp
 from aiosseclient import aiosseclient
-import pprint
-import json
 
 wikis = {}
 
-ostream = open("stream.json", 'a')
-count = 0
+# count: int = 0
+
 
 async def fetch(session, d, url):
+    '''Fetch a url'''
     try:
         resp = await session.get(url)
         doc = await resp.text()
         d['content'] = doc
-        json.dump(d, ostream)
-        ostream.write('\n')
+        with open('stream.json', 'a', encoding='utf8') as ostream:
+            json.dump(d, ostream)
+            ostream.write('\n')
         return 'ok'
 
-    except concurrent.futures._base.TimeoutError as e:
+    except TimeoutError as e:
         print(e)
-        return await fetch(session,d,  url)
+        return await fetch(session, d, url)
+
 
 async def read_stream(session):
+    '''Main loop'''
     try:
         async for event in aiosseclient('https://stream.wikimedia.org/v2/stream/recentchange'):
             d = json.loads(event.data)
@@ -38,33 +42,37 @@ async def read_stream(session):
                 continue
 
             if w not in wikis:
-                wikis [w] = {'min': _id, 'max' : _id , 'count': 1}
+                wikis[w] = {'min': _id, 'max': _id, 'count': 1}
 
-            if wikis [w]['min'] > _id :
-                wikis [w]['min'] = _id
+            if wikis[w]['min'] > _id:
+                wikis[w]['min'] = _id
 
-                #if wikis [w]['max'] < _id:
-                # wikis [w]['max'] = _id
-                wikis [w]['count'] = wikis [w]['count'] +1
-                #pprint.pprint([w, wikis[w]])
-                #pprint.pprint(d)
+                # if wikis[w]['max'] < _id:
+                #   wikis[w]['max'] = _id
+                wikis[w]['count'] = wikis[w]['count'] + 1
+                # pprint.pprint([w, wikis[w]])
+                # pprint.pprint(d)
 
                 server_script_path = d['server_script_path']
                 server_url = d['server_url']
 
-                url = server_url + server_script_path + '/index.php?oldid=' + str(_id) + '&action=raw'
+                url = server_url + server_script_path + f'/index.php?oldid={str(_id)}&action=raw'
                 status = await fetch(session, d, url)
-                global count
-                count = count + 1
-                if count % 1000 == 0:
-                    print(".")
-    except Exception as e:
+                print('status', status)
+                # global count
+                # count = count + 1
+                # if count % 1000 == 0:
+                #     print('.')
+    except TimeoutError as e:
         print(e)
         return await read_stream(session)
 
+
 async def main():
+    '''Main'''
     async with aiohttp.ClientSession() as session:
         never = await read_stream(session)
+        print(never)
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
