@@ -2,7 +2,7 @@ import re
 import aiohttp
 import warnings
 
-async def aiosseclient(url, last_id=None, valid_http_codes=[200, 301, 307], exit_events=[], **kwargs):
+async def aiosseclient(url, last_id=None, valid_http_codes=[200,301,307], exit_events=[], timeout_total=None, **kwargs):
     if 'headers' not in kwargs:
         kwargs['headers'] = {}
 
