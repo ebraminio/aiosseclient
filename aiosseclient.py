@@ -9,7 +9,7 @@ from typing import (
 )
 import aiohttp
 
-# pylint: disable=too-many-arguments, dangerous-default-value, redefined-builtin
+# pylint: disable=too-many-arguments, dangerous-default-value, redefined-builtin, unsubscriptable-object
 
 _SSE_LINE_PATTERN: Final[re.Pattern[str]] = re.compile('(?P<name>[^:]*):?( ?(?P<value>.*))?')
 
