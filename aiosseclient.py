@@ -2,7 +2,7 @@ import re
 import aiohttp
 import warnings
 
-async def aiosseclient(url, last_id=None, valid_http_codes=[200, 301, 307], exit_events=[], **kwargs):
+async def aiosseclient(url, last_id=None, valid_http_codes=[200,301,307], exit_events=[], timeout_total=None, **kwargs):
     if 'headers' not in kwargs:
         kwargs['headers'] = {}
 
@@ -16,29 +16,34 @@ async def aiosseclient(url, last_id=None, valid_http_codes=[200, 301, 307], exit
         kwargs['headers']['Last-Event-ID'] = last_id
     
     # Override default timeout of 5 minutes
-    timeout = aiohttp.ClientTimeout(total=None, connect=None,
+    timeout = aiohttp.ClientTimeout(total=timeout_total, connect=None,
                       sock_connect=None, sock_read=None)
     async with aiohttp.ClientSession(timeout=timeout) as session:
-        response = await session.get(url, **kwargs)
-        if response.status not in valid_http_codes:
-            yield Event("Invalid HTTP response.status: %s" % response.status, "stream_failed")
-            await session.close()
-        lines = []
-        async for line in response.content:
-            line = line.decode('utf8')
+        try:
+            yield Event("session created: %s" % session, "stream_telemetry")
+            response = await session.get(url, **kwargs)
+            if response.status not in valid_http_codes:
+                yield Event("Invalid HTTP response.status: %s" % response.status, "stream_failed")
+                await session.close()
+            lines = []
+            async for line in response.content:
+                line = line.decode('utf8')
 
-            if line == '\n' or line == '\r' or line == '\r\n':
-                if lines[0] == ':ok\n':
+                if line == '\n' or line == '\r' or line == '\r\n':
+                    if lines[0] == ':ok\n':
+                        lines = []
+                        continue
+
+                    current_event = Event.parse(''.join(lines))
+                    yield current_event
+                    if current_event.event in exit_events:
+                        await session.close()
                     lines = []
-                    continue
-
-                current_event = Event.parse(''.join(lines))
-                yield current_event
-                if current_event.event in exit_events:
-                    await session.close()
-                lines = []
-            else:
-                lines.append(line)
+                else:
+                    lines.append(line)
+        except Exception as sseerr:
+            yield Event("Exception: %s" % sseerr, "session_failed")
+            await session.close()
 
 
 # Below code is directly brought from https://github.com/btubbs/sseclient/blob/db38dc6/sseclient.py#L101-L163
