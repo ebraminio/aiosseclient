@@ -1,4 +1,4 @@
-'''Asynchronous Server Side Events (SSE) Client'''
+'''Main module'''
 import re
 import logging
 from typing import (
@@ -12,7 +12,7 @@ import aiohttp
 # pylint: disable=too-many-arguments, dangerous-default-value, redefined-builtin, unsubscriptable-object
 
 _SSE_LINE_PATTERN: Final[re.Pattern[str]] = re.compile('(?P<name>[^:]*):?( ?(?P<value>.*))?')
-
+_LOGGER = logging.getLogger(__name__)
 
 # Good parts of the below class is adopted from:
 #   https://github.com/btubbs/sseclient/blob/db38dc6/sseclient.py
@@ -66,7 +66,7 @@ class Event:
             m = _SSE_LINE_PATTERN.match(line)
             if m is None:
                 # Malformed line.  Discard but warn.
-                logging.warning('Invalid SSE line: %s', line)
+                _LOGGER.warning('Invalid SSE line: %s', line)
                 continue
 
             name = m.group('name')
@@ -119,10 +119,10 @@ async def aiosseclient(
                                     sock_connect=None, sock_read=None)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         try:
-            logging.info('Session created: %s', session)
+            _LOGGER.info('Session created: %s', session)
             response = await session.get(url, headers=headers)
             if response.status not in valid_http_codes:
-                logging.error('Invalid HTTP response.status: %s', response.status)
+                _LOGGER.error('Invalid HTTP response.status: %s', response.status)
                 await session.close()
             lines = []
             async for line in response.content:
@@ -141,5 +141,5 @@ async def aiosseclient(
                 else:
                     lines.append(line)
         except TimeoutError as sseerr:
-            logging.error('TimeoutError: %s', sseerr)
+            _LOGGER.error('TimeoutError: %s', sseerr)
             await session.close()
