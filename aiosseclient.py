@@ -1,6 +1,6 @@
 '''Asynchronous Server Side Events (SSE) Client'''
 import re
-import warnings
+import logging
 from typing import (
     List,
     Optional,
@@ -66,7 +66,7 @@ class Event:
             m = _SSE_LINE_PATTERN.match(line)
             if m is None:
                 # Malformed line.  Discard but warn.
-                warnings.warn('Invalid SSE line: "{line}"', SyntaxWarning)
+                logging.warning('Invalid SSE line: %s', line)
                 continue
 
             name = m.group('name')
@@ -91,7 +91,7 @@ class Event:
 
         return msg
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.data
 
 
@@ -119,10 +119,10 @@ async def aiosseclient(
                                     sock_connect=None, sock_read=None)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         try:
-            yield Event(f'session created: {session}', 'stream_telemetry')
+            logging.info('Session created: %s', session)
             response = await session.get(url, headers=headers)
             if response.status not in valid_http_codes:
-                yield Event(f'Invalid HTTP response.status: {response.status}', 'stream_failed')
+                logging.error('Invalid HTTP response.status: %s', response.status)
                 await session.close()
             lines = []
             async for line in response.content:
@@ -141,5 +141,5 @@ async def aiosseclient(
                 else:
                     lines.append(line)
         except TimeoutError as sseerr:
-            yield Event(f'TimeoutError: {sseerr}', 'session_failed')
+            logging.error('TimeoutError: %s', sseerr)
             await session.close()
