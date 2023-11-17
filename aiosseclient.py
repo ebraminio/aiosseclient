@@ -9,7 +9,7 @@ from typing import (
 )
 import aiohttp
 
-# pylint: disable=too-many-arguments, dangerous-default-value, redefined-builtin, unsubscriptable-object
+# pylint: disable=too-many-arguments, dangerous-default-value, redefined-builtin
 
 _SSE_LINE_PATTERN: Final[re.Pattern] = re.compile('(?P<name>[^:]*):?( ?(?P<value>.*))?')
 _LOGGER = logging.getLogger(__name__)
