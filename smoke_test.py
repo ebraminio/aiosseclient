@@ -1,10 +1,20 @@
-'''A dummy test file'''
+'''A simple smoke test'''
+import json
+import pytest
 
-def func(x):
-    '''A dummy logic test'''
-    return x + 1
+from aiosseclient import aiosseclient
 
+@pytest.mark.asyncio
+async def test_basic_usage():
+    '''Test basic usage.'''
+    messages = []
+    async for event in aiosseclient('https://stream.wikimedia.org/v2/stream/recentchange'):
+        if len(messages) > 1:
+            break
+        messages.append(event)
 
-def test_answer():
-    '''A dummy test case'''
-    assert func(4) == 5
+    assert messages[0].event == 'message'
+    assert messages[1].event == 'message'
+    data_0 = json.loads(messages[0].data)
+    data_1 = json.loads(messages[1].data)
+    assert data_0['meta']['id'] != data_1['meta']['id']
