@@ -11,7 +11,7 @@ import aiohttp
 
 # pylint: disable=too-many-arguments, dangerous-default-value, redefined-builtin, unsubscriptable-object
 
-_SSE_LINE_PATTERN: Final[re.Pattern[str]] = re.compile('(?P<name>[^:]*):?( ?(?P<value>.*))?')
+_SSE_LINE_PATTERN: Final[re.Pattern] = re.compile('(?P<name>[^:]*):?( ?(?P<value>.*))?')
 _LOGGER = logging.getLogger(__name__)
 
 # Good parts of the below class is adopted from:
