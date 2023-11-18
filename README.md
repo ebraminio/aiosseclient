@@ -18,3 +18,11 @@ async def main():
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
 ```
+
+Alternative libraries
+---------------------
+There are different libraries, apparently inspired from this library initially, that right now are
+handling session close better using a different API,
+
+* https://github.com/rtfol/aiohttp-sse-client
+* https://github.com/JelleZijlstra/aiohttp-sse-client2
