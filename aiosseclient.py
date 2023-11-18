@@ -142,4 +142,6 @@ async def aiosseclient(
                     lines.append(line)
         except TimeoutError as sseerr:
             _LOGGER.error('TimeoutError: %s', sseerr)
-            await session.close()
+        finally:
+            if not session.closed:
+                await session.close()
