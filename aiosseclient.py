@@ -106,7 +106,7 @@ async def aiosseclient(
 ) -> AsyncGenerator[Event, None]:
     '''Canonical API of the library'''
     if headers is None:
-        headers = dict()
+        headers = {}
     # The SSE spec requires making requests with Cache-Control: nocache
     headers['Cache-Control'] = 'no-cache'
 
