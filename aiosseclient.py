@@ -130,6 +130,8 @@ async def aiosseclient(
                 line = line.decode('utf8')
 
                 if line in {'\n', '\r', '\r\n'}:
+                    if not lines:
+                        continue
                     if lines[0] == ':ok\n':
                         lines = []
                         continue
