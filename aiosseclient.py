@@ -87,7 +87,7 @@ class Event:
             elif name == 'id':
                 msg.id = value
             elif name == 'retry':
-                msg.retry = int(value)
+                msg.retry = bool(value)
 
         return msg
 
@@ -102,9 +102,11 @@ async def aiosseclient(
     valid_http_codes: List[int] = [200, 301, 307],
     exit_events: List[str] = [],
     timeout_total: Optional[float] = None,
-    headers: Optional[dict[str, str]] = {},
+    headers: Optional[dict[str, str]] = None,
 ) -> AsyncGenerator[Event, None]:
     '''Canonical API of the library'''
+    if headers is None:
+        headers = dict()
     # The SSE spec requires making requests with Cache-Control: nocache
     headers['Cache-Control'] = 'no-cache'
 
