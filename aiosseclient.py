@@ -87,7 +87,7 @@ class Event:
             elif name == 'id':
                 msg.id = value
             elif name == 'retry':
-                msg.retry = int(value)
+                msg.retry = bool(value)
 
         return msg
 
@@ -102,9 +102,11 @@ async def aiosseclient(
     valid_http_codes: List[int] = [200, 301, 307],
     exit_events: List[str] = [],
     timeout_total: Optional[float] = None,
-    headers: Optional[dict[str, str]] = {},
+    headers: Optional[dict[str, str]] = None,
 ) -> AsyncGenerator[Event, None]:
     '''Canonical API of the library'''
+    if headers is None:
+        headers = dict()
     # The SSE spec requires making requests with Cache-Control: nocache
     headers['Cache-Control'] = 'no-cache'
 
@@ -118,6 +120,7 @@ async def aiosseclient(
     timeout = aiohttp.ClientTimeout(total=timeout_total, connect=None,
                                     sock_connect=None, sock_read=None)
     async with aiohttp.ClientSession(timeout=timeout) as session:
+        response = None
         try:
             _LOGGER.info('Session created: %s', session)
             response = await session.get(url, headers=headers)
@@ -129,6 +132,8 @@ async def aiosseclient(
                 line = line.decode('utf8')
 
                 if line in {'\n', '\r', '\r\n'}:
+                    if not lines:
+                        continue
                     if lines[0] == ':ok\n':
                         lines = []
                         continue
@@ -143,5 +148,7 @@ async def aiosseclient(
         except TimeoutError as sseerr:
             _LOGGER.error('TimeoutError: %s', sseerr)
         finally:
+            if response:
+                response.close()
             if not session.closed:
                 await session.close()
