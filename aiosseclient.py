@@ -118,6 +118,7 @@ async def aiosseclient(
     timeout = aiohttp.ClientTimeout(total=timeout_total, connect=None,
                                     sock_connect=None, sock_read=None)
     async with aiohttp.ClientSession(timeout=timeout) as session:
+        response = None
         try:
             _LOGGER.info('Session created: %s', session)
             response = await session.get(url, headers=headers)
@@ -143,5 +144,7 @@ async def aiosseclient(
         except TimeoutError as sseerr:
             _LOGGER.error('TimeoutError: %s', sseerr)
         finally:
+            if response:
+                response.close()
             if not session.closed:
                 await session.close()
