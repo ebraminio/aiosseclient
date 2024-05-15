@@ -6,6 +6,7 @@ from typing import (
     Optional,
     AsyncGenerator,
     Final,
+    Dict
 )
 import aiohttp
 
@@ -102,7 +103,7 @@ async def aiosseclient(
     valid_http_codes: List[int] = [200, 301, 307],
     exit_events: List[str] = [],
     timeout_total: Optional[float] = None,
-    headers: Optional[dict[str, str]] = None,
+    headers: Optional[Dict[str, str]] = None,
 ) -> AsyncGenerator[Event, None]:
     '''Canonical API of the library'''
     if headers is None:
