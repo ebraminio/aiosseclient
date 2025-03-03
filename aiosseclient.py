@@ -1,5 +1,4 @@
 '''Main module'''
-import re
 import logging
 from typing import (
     List,
@@ -12,7 +11,6 @@ import aiohttp
 
 # pylint: disable=too-many-arguments, dangerous-default-value, redefined-builtin
 
-_SSE_LINE_PATTERN: Final[re.Pattern] = re.compile('(?P<name>[^:]*):?( ?(?P<value>.*))?')
 _LOGGER = logging.getLogger(__name__)
 
 # Good parts of the below class is adopted from:
@@ -64,17 +62,16 @@ class Event:
         '''
         msg = cls()
         for line in raw.splitlines():
-            m = _SSE_LINE_PATTERN.match(line)
-            if m is None:
+            parts = line.split(':', 1)
+            if len(parts) != 2:
                 # Malformed line.  Discard but warn.
                 _LOGGER.warning('Invalid SSE line: %s', line)
                 continue
 
-            name = m.group('name')
+            name, value = parts
             if name == '':
                 # line began with a ':', so is a comment.  Ignore
                 continue
-            value = m.group('value')
 
             if name == 'data':
                 # If we already have some data, then join to it with a newline.
