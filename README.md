@@ -5,6 +5,8 @@ Similar to [sseclient](https://github.com/btubbs/sseclient) and [sseclient-py](h
 
 Install it with this: `pip3 install aiosseclient`
 
+https://pypi.org/project/aiosseclient/
+
 Sample code ([read more](https://wikitech.wikimedia.org/wiki/EventStreams)):
 ```python
 import asyncio
