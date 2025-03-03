@@ -4,7 +4,6 @@ from typing import (
     List,
     Optional,
     AsyncGenerator,
-    Final,
     Dict
 )
 import aiohttp
