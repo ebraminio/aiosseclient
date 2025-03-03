@@ -73,6 +73,9 @@ class Event:
                 # line began with a ':', so is a comment.  Ignore
                 continue
 
+            if value.startswith(' '):
+                value = value[1:]
+
             if name == 'data':
                 # If we already have some data, then join to it with a newline.
                 # Else this is it.
