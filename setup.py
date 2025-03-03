@@ -8,7 +8,7 @@ with open('LICENSE', 'r', encoding='utf8') as f:
 
 setup(
     name='aiosseclient',
-    version='0.1.5',
+    version='0.1.6',
     description='Asynchronous Server Sent Event streams client.',
     long_description=readme,
     long_description_content_type='text/markdown',
