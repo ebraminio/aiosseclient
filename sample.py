@@ -34,7 +34,7 @@ async def read_stream(session):
 
             w = d['wiki']
             if 'revision' in d:
-                _id = d['revision']['old']
+                _id = d['revision'].get('old')
             else:
                 continue
 
