@@ -56,45 +56,42 @@ class Event:
         """Serialize the event object to a bytes object"""
         return self.dump().encode('utf-8')
 
-    @staticmethod
-    def parse(raw: str) -> Event:
+    @classmethod
+    def parse(cls, raw: str) -> Event:
         """
         Given a possibly-multiline string representing an SSE message, parse it
         and return an Event object.
         """
-        return _parse_lines_as_event(raw.splitlines())
+        msg = cls()
+        for line in raw.splitlines():
+            parts = line.split(':', 1)
+            if len(parts) != 2:
+                # Malformed line.  Discard but warn.
+                _LOGGER.warning('Invalid SSE line: %s', line)
+                continue
+
+            name, value = parts
+            if value.startswith(' '):
+                value = value[1:]
+
+            if name == 'data':
+                # If we already have some data, then join to it with a newline.
+                # Else this is it.
+                if msg.data:
+                    msg.data = f'{msg.data}\n{value}'
+                else:
+                    msg.data = value
+            elif name == 'event':
+                msg.event = value
+            elif name == 'id':
+                msg.id = value
+            elif name == 'retry':
+                msg.retry = bool(value)
+
+        return msg
 
     def __str__(self) -> str:
         return self.data
-
-
-def _parse_lines_as_event(lines: List[str]) -> Event:
-    msg = Event()
-    for line in lines:
-        parts = line.split(':', 1)
-        if len(parts) != 2:
-            # Malformed line.  Discard but warn.
-            _LOGGER.warning('Invalid SSE line: %s', line)
-            continue
-
-        name, value = parts
-        if value.startswith(' '):
-            value = value[1:]
-
-        if name == 'data':
-            # If we already have some data, then join to it with a newline.
-            # Else this is it.
-            if msg.data:
-                msg.data = f'{msg.data}\n{value}'
-            else:
-                msg.data = value
-        elif name == 'event':
-            msg.event = value
-        elif name == 'id':
-            msg.id = value
-        elif name == 'retry':
-            msg.retry = bool(value)
-    return msg
 
 
 # noinspection PyDefaultArgument
@@ -138,7 +135,7 @@ async def aiosseclient(
                 if line in {'\n', '\r', '\r\n'}:
                     if not lines:
                         continue
-                    current_event = _parse_lines_as_event(lines)
+                    current_event = Event.parse(''.join(lines))
                     yield current_event
                     if current_event.event in exit_events:
                         await session.close()
