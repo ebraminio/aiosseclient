@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-'''Asynchronous Server Side Events (SSE) Client'''
+"""Asynchronous Server Side Events (SSE) Client"""
 import asyncio
 import json
 import aiohttp
@@ -11,14 +11,14 @@ wikis = {}
 
 
 async def fetch(session, d, url):
-    '''Fetch a url'''
+    """Fetch a url"""
     try:
         resp = await session.get(url)
         doc = await resp.text()
         d['content'] = doc
-        with open('stream.json', 'a', encoding='utf8') as ostream:
-            json.dump(d, ostream)
-            ostream.write('\n')
+        with open('stream.json', 'a', encoding='utf8') as stream:
+            json.dump(d, stream)
+            stream.write('\n')
         return 'ok'
 
     except TimeoutError as e:
@@ -27,7 +27,7 @@ async def fetch(session, d, url):
 
 
 async def read_stream(session):
-    '''Main loop'''
+    """Main loop"""
     try:
         async for event in aiosseclient('https://stream.wikimedia.org/v2/stream/recentchange'):
             d = json.loads(event.data)
@@ -59,17 +59,13 @@ async def read_stream(session):
                 url = server_url + server_script_path + f'/index.php?oldid={str(_id)}&action=raw'
                 status = await fetch(session, d, url)
                 print('status', status)
-                # global count
-                # count = count + 1
-                # if count % 1000 == 0:
-                #     print('.')
     except TimeoutError as e:
         print(e)
         return await read_stream(session)
 
 
 async def main():
-    '''Main'''
+    """Main"""
     async with aiohttp.ClientSession() as session:
         never = await read_stream(session)
         print(never)
