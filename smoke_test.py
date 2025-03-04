@@ -1,4 +1,4 @@
-'''A simple smoke test'''
+"""A simple smoke test"""
 import json
 import pytest
 
