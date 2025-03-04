@@ -1,4 +1,4 @@
-'''Main module'''
+"""Main module"""
 from __future__ import annotations
 import logging
 from typing import (
@@ -8,15 +8,17 @@ from typing import (
     Dict
 )
 import aiohttp
+import asyncio
 
 # pylint: disable=too-many-arguments, dangerous-default-value, redefined-builtin
 
 _LOGGER = logging.getLogger(__name__)
 
+
 # Good parts of the below class is adopted from:
 #   https://github.com/btubbs/sseclient/blob/db38dc6/sseclient.py
 class Event:
-    '''The object created as the result of received events'''
+    """The object created as the result of received events"""
     data: str
     event: str
     id: Optional[str]
@@ -35,7 +37,7 @@ class Event:
         self.retry = retry
 
     def dump(self) -> str:
-        '''Serialize the event object to a string'''
+        """Serialize the event object to a string"""
         lines = []
         if self.id:
             lines.append(f'id: {self.id}')
@@ -51,15 +53,15 @@ class Event:
         return '\n'.join(lines) + '\n\n'
 
     def encode(self) -> bytes:
-        '''Serialize the event object to a bytes object'''
+        """Serialize the event object to a bytes object"""
         return self.dump().encode('utf-8')
 
     @classmethod
-    def parse(cls, raw: List[str]) -> Event:
-        '''
+    def parse(cls, raw: str) -> Event:
+        """
         Given a possibly-multiline string representing an SSE message, parse it
-        and return a Event object.
-        '''
+        and return an Event object.
+        """
         msg = cls()
         for line in raw.splitlines():
             parts = line.split(':', 1)
@@ -92,6 +94,8 @@ class Event:
         return self.data
 
 
+# noinspection PyDefaultArgument
+# flake8: noqa: C901
 # pylint: disable=too-many-arguments, dangerous-default-value
 async def aiosseclient(
     url: str,
@@ -101,7 +105,7 @@ async def aiosseclient(
     timeout_total: Optional[float] = None,
     headers: Optional[Dict[str, str]] = None,
 ) -> AsyncGenerator[Event, None]:
-    '''Canonical API of the library'''
+    """Canonical API of the library"""
     if headers is None:
         headers = {}
     # The SSE spec requires making requests with Cache-Control: nocache
@@ -141,8 +145,8 @@ async def aiosseclient(
                     pass
                 else:
                     lines.append(line)
-        except TimeoutError as sseerr:
-            _LOGGER.error('TimeoutError: %s', sseerr)
+        except asyncio.TimeoutError as e:
+            _LOGGER.error('TimeoutError: %s', e)
         finally:
             if response:
                 response.close()

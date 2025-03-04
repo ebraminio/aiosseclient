@@ -4,9 +4,10 @@ import pytest
 
 from aiosseclient import aiosseclient
 
+
 @pytest.mark.asyncio
 async def test_basic_usage():
-    '''Test basic usage.'''
+    """Test basic usage."""
     messages = []
     async for event in aiosseclient('https://stream.wikimedia.org/v2/stream/recentchange'):
         if len(messages) > 1:
