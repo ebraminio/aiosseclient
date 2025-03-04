@@ -11,7 +11,7 @@ wikis = {}
 
 
 async def fetch(session, d, url):
-    '''Fetch a url'''
+    """Fetch a url"""
     try:
         resp = await session.get(url)
         doc = await resp.text()
@@ -27,7 +27,7 @@ async def fetch(session, d, url):
 
 
 async def read_stream(session):
-    '''Main loop'''
+    """Main loop"""
     try:
         async for event in aiosseclient('https://stream.wikimedia.org/v2/stream/recentchange'):
             d = json.loads(event.data)
@@ -69,7 +69,7 @@ async def read_stream(session):
 
 
 async def main():
-    '''Main'''
+    """Main"""
     async with aiohttp.ClientSession() as session:
         never = await read_stream(session)
         print(never)
