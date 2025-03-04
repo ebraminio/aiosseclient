@@ -7,8 +7,8 @@ from typing import (
     AsyncGenerator,
     Dict
 )
-import aiohttp
 import asyncio
+import aiohttp
 
 # pylint: disable=too-many-arguments, dangerous-default-value, redefined-builtin
 
