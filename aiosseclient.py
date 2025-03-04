@@ -69,10 +69,6 @@ class Event:
                 continue
 
             name, value = parts
-            if name == '':
-                # line began with a ':', so is a comment.  Ignore
-                continue
-
             if value.startswith(' '):
                 value = value[1:]
 
@@ -135,15 +131,14 @@ async def aiosseclient(
                 if line in {'\n', '\r', '\r\n'}:
                     if not lines:
                         continue
-                    if lines[0] == ':ok\n':
-                        lines = []
-                        continue
-
                     current_event = Event.parse(''.join(lines))
                     yield current_event
                     if current_event.event in exit_events:
                         await session.close()
                     lines = []
+                elif line.startswith(':'):
+                    # Lines start with a ':' are comment, ignore them
+                    pass
                 else:
                     lines.append(line)
         except TimeoutError as sseerr:
