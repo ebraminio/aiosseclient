@@ -55,7 +55,7 @@ class Event:
         return self.dump().encode('utf-8')
 
     @classmethod
-    def parse(cls, raw) -> Event:
+    def parse(cls, raw: List[str]) -> Event:
         '''
         Given a possibly-multiline string representing an SSE message, parse it
         and return a Event object.
