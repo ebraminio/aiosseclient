@@ -1,4 +1,5 @@
 '''Main module'''
+from __future__ import annotations
 import logging
 from typing import (
     List,
@@ -54,7 +55,7 @@ class Event:
         return self.dump().encode('utf-8')
 
     @classmethod
-    def parse(cls, raw):
+    def parse(cls, raw) -> Event:
         '''
         Given a possibly-multiline string representing an SSE message, parse it
         and return a Event object.
