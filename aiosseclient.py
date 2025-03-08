@@ -111,8 +111,9 @@ async def aiosseclient(
     # The SSE spec requires making requests with Cache-Control: nocache
     headers['Cache-Control'] = 'no-cache'
 
-    # The 'Accept' header is not required, but explicit > implicit
-    headers['Accept'] = 'text/event-stream'
+    if 'Accept' not in headers:
+        # The 'Accept' header is not required, but explicit > implicit
+        headers['Accept'] = 'text/event-stream'
 
     if last_id:
         headers['Last-Event-ID'] = last_id
