@@ -104,6 +104,7 @@ async def aiosseclient(
     exit_events: List[str] = [],
     timeout_total: Optional[float] = None,
     headers: Optional[Dict[str, str]] = None,
+    raise_for_status: bool = False,
 ) -> AsyncGenerator[Event, None]:
     """Canonical API of the library"""
     if headers is None:
@@ -124,7 +125,7 @@ async def aiosseclient(
         response = None
         try:
             _LOGGER.info('Session created: %s', session)
-            response = await session.get(url, headers=headers)
+            response = await session.get(url, headers=headers, raise_for_status=raise_for_status)
             if response.status not in valid_http_codes:
                 _LOGGER.error('Invalid HTTP response.status: %s', response.status)
                 await session.close()
