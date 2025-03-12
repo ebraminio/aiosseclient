@@ -133,7 +133,7 @@ async def aiosseclient(
             async for line in response.content:
                 line = line.decode('utf8')
 
-                if line == '\n' or line == '\r' or line == '\r\n':
+                if line in {'\n', '\r', '\r\n'}:
                     if not lines:
                         continue
                     current_event = Event.parse(''.join(lines))
